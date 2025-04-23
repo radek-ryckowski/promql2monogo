@@ -1,0 +1,52 @@
+# Server configuration
+server:
+  host: "0.0.0.0"
+  port: 9090
+  queryPath: "/api/v1/query" # Note: Prometheus usually uses /api/v1/query and /api/v1/query_range
+
+# MongoDB connection configuration
+mongodb:
+  uri: "mongodb://localhost:27017"
+  database: "metrics_db"
+  timeout: 30  # connection timeout in seconds
+
+# Configuration for PromQL to MongoDB mapping
+collections:
+  http_requests:
+    name: metrics_http         # MongoDB collection name
+    timeField: timestamp       # Field containing the timestamp
+    metricField: metric_name   # Field containing the value for the '__name__' label
+    valueField: value          # Field containing the numeric metric value
+    labelFields:               # Mapping from PromQL labels to MongoDB fields
+      code: status_code
+      method: http_method
+      path: endpoint
+      instance: server_id
+    defaultLabels:             # Default labels to add if not present
+      environment: "production"
+
+  node_cpu:
+    name: metrics_system
+    timeField: ts
+    metricField: name          # e.g., "node_cpu_seconds_total"
+    valueField: value          # The actual CPU time value
+    labelFields:
+      mode: cpu_mode
+      cpu: cpu_id
+      instance: host
+
+  memory_usage:
+    name: metrics_memory
+    timeField: time
+    metricField: metric        # e.g., "node_memory_usage_bytes"
+    valueField: value          # The actual memory byte value
+    labelFields:
+      type: memory_type
+      instance: host_id
+
+# Mapping from PromQL metric names (used in queries) to collection keys above
+mappings:
+  http_requests_total: http_requests
+  http_request_duration_seconds: http_requests
+  node_cpu_seconds_total: node_cpu
+  node_memory_usage_bytes: memory_usage
